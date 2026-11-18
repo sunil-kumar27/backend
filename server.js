@@ -14,12 +14,22 @@ if (!mongoUri) {
     console.error("MONGODB_URI is required. Copy .env.example to .env and add your Atlas connection string.");
     process.exit(1);
 }
-if (!adminApiKey) {
-    console.error("ADMIN_API_KEY is required. Set a private key in backend/.env.");
+if (mongoUri.includes("<db_password>") || mongoUri.includes("<cluster-host>")) {
+    console.error("MONGODB_URI still contains a placeholder. Replace <db_password> with your current Atlas password in backend/.env.");
+    process.exit(1);
+}
+if (!adminApiKey || adminApiKey === "replace-with-a-long-random-secret") {
+    console.error("ADMIN_API_KEY is not configured. Set a long, private random value in backend/.env.");
     process.exit(1);
 }
 
-const client = new MongoClient(mongoUri);
+let client;
+try {
+    client = new MongoClient(mongoUri);
+} catch (error) {
+    console.error("MONGODB_URI is invalid. URL-encode reserved characters in the password.");
+    process.exit(1);
+}
 let products;
 let orders;
 
